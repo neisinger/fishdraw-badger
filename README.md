@@ -40,18 +40,18 @@ cd fishdraw-badger
 
 2. **Copy files to Badger2040**
 
-Connect your Badger2040 via USB and copy these files to the device:
+Connect your Badger2040 via USB and copy these files to the root directory:
 - `main.py` - Entry point (starts automatically on boot)
-- `badger2040_fish.py` - Display driver and main logic
-- `fishdraw.py` - Fish generation algorithm
+- `badger2040_fish.py` - Fish generation + display driver (all-in-one)
 - `config.json` - Configuration file (optional)
 
-Using MicroPython's file transfer tool or Thonny IDE:
+**That's it!** Only 2-3 files needed.
+
+Using Thonny IDE or any MicroPython file manager:
 ```
-main.py → root
-badger2040_fish.py → root
-fishdraw.py → root
-config.json → root (optional)
+main.py → /
+badger2040_fish.py → /
+config.json → / (optional)
 ```
 
 3. **Power on or reset the device**
@@ -115,32 +115,34 @@ The device remembers up to 200 previously generated fish. Press UP/DOWN to brows
 ```
 main.py (entry point)
     ↓
-badger2040_fish.py (BadgerFish class)
-    ├─ Button handling
-    ├─ Display rendering via badger.line()
-    └─ Seed history management
-        ↓
-fishdraw.py (FishDraw class)
+badger2040_fish.py (all-in-one)
     ├─ SeededRandom (deterministic RNG)
-    ├─ PerlinNoise (organic shapes)
-    └─ Fish generation algorithm
+    ├─ SimpleNoise (hash-based noise)
+    ├─ generate_fish() (fish generation)
+    └─ BadgerFish class (display & UI)
+        ├─ Button handling
+        ├─ Display rendering via badger.line()
+        └─ Seed history management
 ```
+
+Single file = simpler deployment!
 
 ## File Structure
 
 ```
 .
-├── main.py                          # Entry point - copy to Badger2040
-├── badger2040_fish.py               # Display driver and UI
-├── fishdraw.py                      # Fish generation algorithm
-├── config.json                      # Configuration file
-├── samples/                         # Example generated fish
+├── main.py                    # Entry point - copy to Badger2040
+├── badger2040_fish.py         # Fish generation + display driver (all-in-one)
+├── config.json                # Configuration file (optional)
+├── samples/                   # Example generated fish
 │   ├── fish_001_12345.png
 │   ├── fish_002_67890.png
 │   └── ...
-├── README.md                        # This file
-└── LICENSE                          # MIT License
+├── README.md                  # This file
+└── LICENSE                    # MIT License
 ```
+
+**Only copy the first 3 files to Badger2040!**
 
 ## Technical Details
 
@@ -153,9 +155,10 @@ fishdraw.py (FishDraw class)
 
 ### Memory Efficiency
 
-- ~5-10 KB per fish in history (seed only, not image data)
-- Can store 200 fish with <2 MB storage
-- Minimal RAM usage during generation (<50 KB)
+- **Single file**: No import overhead
+- **~10 KB memory per fish**: Hash-based noise instead of Perlin arrays
+- **Can store 200 fish**: Seeds only (5-10 bytes each)
+- **Instant generation**: No malloc failures on Badger2040
 
 ### Performance
 
