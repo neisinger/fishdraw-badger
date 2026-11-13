@@ -2,7 +2,7 @@
 
 *procedurally generated fish drawings for 296x128 displays*
 
-![](samples/000020.svg)
+[![Sample Fish](samples/000020.svg "Procedurally generated fish")](samples/000020.svg)
 
 - generates diverse procedural fish in real-time
 - optimized for Badger2040 e-ink display (296x128 resolution)
@@ -227,37 +227,15 @@ Animated SVG for web display with configurable animation speed
 
 ## gallery
 
-Sample fish generated with various seeds:
+Sample fish generated with various seeds. Click any image to view it larger:
 
-![](samples/000000.svg)
-![](samples/000001.svg)
-![](samples/000002.svg)
-![](samples/000003.svg)
-![](samples/000004.svg)
-![](samples/000005.svg)
-![](samples/000006.svg)
-![](samples/000007.svg)
-![](samples/000008.svg)
-![](samples/000009.svg)
-![](samples/000010.svg)
-![](samples/000011.svg)
-![](samples/000012.svg)
-![](samples/000013.svg)
-![](samples/000014.svg)
-![](samples/000015.svg)
-![](samples/000016.svg)
-![](samples/000017.svg)
-![](samples/000018.svg)
-![](samples/000019.svg)
-![](samples/000021.svg)
-![](samples/000022.svg)
-![](samples/000023.svg)
-![](samples/000024.svg)
-![](samples/000025.svg)
-![](samples/000026.svg)
-![](samples/000027.svg)
-![](samples/000028.svg)
-![](samples/000029.svg)
-![](samples/000030.svg)
-![](samples/000031.svg)
-![](samples/000032.svg)
+| | | | |
+|---|---|---|---|
+| [![Fish 0](samples/000000.svg "Fish 0")](samples/000000.svg) | [![Fish 1](samples/000001.svg "Fish 1")](samples/000001.svg) | [![Fish 2](samples/000002.svg "Fish 2")](samples/000002.svg) | [![Fish 3](samples/000003.svg "Fish 3")](samples/000003.svg) |
+| [![Fish 4](samples/000004.svg "Fish 4")](samples/000004.svg) | [![Fish 5](samples/000005.svg "Fish 5")](samples/000005.svg) | [![Fish 6](samples/000006.svg "Fish 6")](samples/000006.svg) | [![Fish 7](samples/000007.svg "Fish 7")](samples/000007.svg) |
+| [![Fish 8](samples/000008.svg "Fish 8")](samples/000008.svg) | [![Fish 9](samples/000009.svg "Fish 9")](samples/000009.svg) | [![Fish 10](samples/000010.svg "Fish 10")](samples/000010.svg) | [![Fish 11](samples/000011.svg "Fish 11")](samples/000011.svg) |
+| [![Fish 12](samples/000012.svg "Fish 12")](samples/000012.svg) | [![Fish 13](samples/000013.svg "Fish 13")](samples/000013.svg) | [![Fish 14](samples/000014.svg "Fish 14")](samples/000014.svg) | [![Fish 15](samples/000015.svg "Fish 15")](samples/000015.svg) |
+| [![Fish 16](samples/000016.svg "Fish 16")](samples/000016.svg) | [![Fish 17](samples/000017.svg "Fish 17")](samples/000017.svg) | [![Fish 18](samples/000018.svg "Fish 18")](samples/000018.svg) | [![Fish 19](samples/000019.svg "Fish 19")](samples/000019.svg) |
+| [![Fish 20](samples/000020.svg "Fish 20")](samples/000020.svg) | [![Fish 21](samples/000021.svg "Fish 21")](samples/000021.svg) | [![Fish 22](samples/000022.svg "Fish 22")](samples/000022.svg) | [![Fish 23](samples/000023.svg "Fish 23")](samples/000023.svg) |
+| [![Fish 24](samples/000024.svg "Fish 24")](samples/000024.svg) | [![Fish 25](samples/000025.svg "Fish 25")](samples/000025.svg) | [![Fish 26](samples/000026.svg "Fish 26")](samples/000026.svg) | [![Fish 27](samples/000027.svg "Fish 27")](samples/000027.svg) |
+| [![Fish 28](samples/000028.svg "Fish 28")](samples/000028.svg) | [![Fish 29](samples/000029.svg "Fish 29")](samples/000029.svg) | [![Fish 30](samples/000030.svg "Fish 30")](samples/000030.svg) | [![Fish 31](samples/000031.svg "Fish 31")](samples/000031.svg) |
