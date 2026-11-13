@@ -85,7 +85,7 @@ class BadgerFish:
             print(f"Display simulation: Would draw {len(polylines)} polylines")
             return
         
-        # Clear display
+        # Clear display (white background)
         self.badger.clear()
         
         # Draw each polyline
@@ -98,40 +98,11 @@ class BadgerFish:
                 x0, y0 = int(polyline[i][0]), int(polyline[i][1])
                 x1, y1 = int(polyline[i + 1][0]), int(polyline[i + 1][1])
                 
-                # Bresenham line drawing
-                self._draw_line(x0, y0, x1, y1, thickness)
+                # Use Badger2040's line drawing
+                self.badger.line(x0, y0, x1, y1, 1, 1)
         
-        # Update display
+        # Update display to show changes
         self.badger.update()
-    
-    def _draw_line(self, x0, y0, x1, y1, thickness=1):
-        """Draw line using Bresenham algorithm"""
-        if not self.has_display:
-            return
-        
-        dx, dy = abs(x1 - x0), abs(y1 - y0)
-        sx = 1 if x0 < x1 else -1
-        sy = 1 if y0 < y1 else -1
-        err = dx - dy
-        
-        while True:
-            # Draw pixel with thickness
-            for tx in range(-thickness//2, thickness//2 + 1):
-                for ty in range(-thickness//2, thickness//2 + 1):
-                    px, py = x0 + tx, y0 + ty
-                    if 0 <= px < self.DISPLAY_WIDTH and 0 <= py < self.DISPLAY_HEIGHT:
-                        self.badger.pixel(px, py)
-            
-            if x0 == x1 and y0 == y1:
-                break
-            
-            e2 = 2 * err
-            if e2 > -dy:
-                err -= dy
-                x0 += sx
-            if e2 < dx:
-                err += dx
-                y0 += sy
     
     def generate_and_display(self, seed=None):
         """Generate a fish and display it as a finished drawing"""
