@@ -322,46 +322,59 @@ Button Controls:
             # Main loop with button handling
             try:
                 while True:
-                    # Check buttons - try different APIs
+                    # Try to check buttons - fallback to simulation if not available
                     try:
-                        if self.badger.button_up.is_pressed():
+                        # Standard Badger2040 pressed() API with constants
+                        import badger2040
+                        if self.badger.pressed(badger2040.UP):
                             self.button_up_pressed()
                             time.sleep(self.BUTTON_DELAY)
-                        elif self.badger.button_down.is_pressed():
+                        elif self.badger.pressed(badger2040.DOWN):
                             self.button_down_pressed()
                             time.sleep(self.BUTTON_DELAY)
-                        elif self.badger.button_a.is_pressed():
+                        elif self.badger.pressed(badger2040.A):
                             self.button_a_pressed()
                             time.sleep(self.BUTTON_DELAY)
-                        elif self.badger.button_b.is_pressed():
+                        elif self.badger.pressed(badger2040.B):
                             self.button_b_pressed()
                             time.sleep(self.BUTTON_DELAY)
-                        elif self.badger.button_c.is_pressed():
+                        elif self.badger.pressed(badger2040.C):
                             self.button_c_pressed()
                             time.sleep(self.BUTTON_DELAY)
-                    except AttributeError:
-                        # Try alternative API with pressed() method
-                        if self.badger.button_up.pressed():
-                            self.button_up_pressed()
-                            time.sleep(self.BUTTON_DELAY)
-                        elif self.badger.button_down.pressed():
-                            self.button_down_pressed()
-                            time.sleep(self.BUTTON_DELAY)
-                        elif self.badger.button_a.pressed():
-                            self.button_a_pressed()
-                            time.sleep(self.BUTTON_DELAY)
-                        elif self.badger.button_b.pressed():
-                            self.button_b_pressed()
-                            time.sleep(self.BUTTON_DELAY)
-                        elif self.badger.button_c.pressed():
-                            self.button_c_pressed()
-                            time.sleep(self.BUTTON_DELAY)
+                    except (AttributeError, NameError, TypeError):
+                        # Fallback: try button objects directly
+                        try:
+                            if hasattr(self.badger, 'pressed') and callable(self.badger.pressed):
+                                # Badger2040 library - use index-based approach
+                                # UP=0, DOWN=1, A=2, B=3, C=4 (common in MicroPython)
+                                if self.badger.pressed(0):  # UP
+                                    self.button_up_pressed()
+                                    time.sleep(self.BUTTON_DELAY)
+                                elif self.badger.pressed(1):  # DOWN
+                                    self.button_down_pressed()
+                                    time.sleep(self.BUTTON_DELAY)
+                                elif self.badger.pressed(2):  # A
+                                    self.button_a_pressed()
+                                    time.sleep(self.BUTTON_DELAY)
+                                elif self.badger.pressed(3):  # B
+                                    self.button_b_pressed()
+                                    time.sleep(self.BUTTON_DELAY)
+                                elif self.badger.pressed(4):  # C
+                                    self.button_c_pressed()
+                                    time.sleep(self.BUTTON_DELAY)
+                        except Exception as e:
+                            # Last resort - just loop without button input
+                            print(f"Warning: Button input not available: {e}")
+                            time.sleep(0.1)
                     
                     time.sleep(0.05)  # Small delay to prevent CPU spinning
             except KeyboardInterrupt:
                 print("\nExiting...")
-                self.badger.clear()
-                self.badger.update()
+                try:
+                    self.badger.clear()
+                    self.badger.update()
+                except:
+                    pass
         else:
             print("\nRunning in simulation mode (interactive)")
             self.interactive_mode()
