@@ -105,7 +105,7 @@ class BadgerFish:
                 for ty in range(-thickness//2, thickness//2 + 1):
                     px, py = x0 + tx, y0 + ty
                     if 0 <= px < self.DISPLAY_WIDTH and 0 <= py < self.DISPLAY_HEIGHT:
-                        self.badger.pixel(px, py, 1)
+                        self.badger.pixel(px, py)
             
             if x0 == x1 and y0 == y1:
                 break
@@ -318,21 +318,28 @@ Button Controls:
             # Main loop with button handling
             try:
                 while True:
-                    # Check buttons
-                    if self.badger.is_pressed(badger2040.UP):
+                    # Check buttons using correct Badger2040 API
+                    if self.badger.pressed(self.badger.UP):
                         self.button_up_pressed()
-                    elif self.badger.is_pressed(badger2040.DOWN):
+                        time.sleep(self.BUTTON_DELAY)
+                    elif self.badger.pressed(self.badger.DOWN):
                         self.button_down_pressed()
-                    elif self.badger.is_pressed(badger2040.A):
+                        time.sleep(self.BUTTON_DELAY)
+                    elif self.badger.pressed(self.badger.A):
                         self.button_a_pressed()
-                    elif self.badger.is_pressed(badger2040.B):
+                        time.sleep(self.BUTTON_DELAY)
+                    elif self.badger.pressed(self.badger.B):
                         self.button_b_pressed()
-                    elif self.badger.is_pressed(badger2040.C):
+                        time.sleep(self.BUTTON_DELAY)
+                    elif self.badger.pressed(self.badger.C):
                         self.button_c_pressed()
+                        time.sleep(self.BUTTON_DELAY)
                     
-                    time.sleep(0.1)
+                    time.sleep(0.05)  # Small delay to prevent CPU spinning
             except KeyboardInterrupt:
-                print("\nShutting down...")
+                print("\nExiting...")
+                self.badger.clear()
+                self.badger.update()
         else:
             print("\nRunning in simulation mode (interactive)")
             self.interactive_mode()

@@ -106,7 +106,8 @@ def noise(x, y= 0, z= 0):
 
 # Geometry utilities
 def dist(x0, y0, x1, y1):
-    return math.hypot(x1 - x0, y1 - y0)
+    dx, dy = x1 - x0, y1 - y0
+    return math.sqrt(dx * dx + dy * dy)
 
 def lerp(a, b, t):
     return a * (1 - t) + b * t
