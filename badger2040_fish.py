@@ -38,10 +38,21 @@ class BadgerFish:
         # Initialize display
         self.badger = None
         self.has_display = False
+        self.button_a = None
+        self.button_b = None
+        self.button_c = None
+        self.button_up = None
+        self.button_down = None
         
         try:
             import badger2040
             self.badger = badger2040.Badger2040()
+            # Get button constants from badger2040 module
+            self.button_a = badger2040.BUTTON_A
+            self.button_b = badger2040.BUTTON_B
+            self.button_c = badger2040.BUTTON_C
+            self.button_up = badger2040.BUTTON_UP
+            self.button_down = badger2040.BUTTON_DOWN
             self.has_display = True
             print("✓ Badger2040 display initialized")
         except ImportError:
@@ -319,70 +330,25 @@ Button Controls:
             # Generate initial fish
             self.generate_and_display(binomen())
             
-            # Detect which button API is available
-            button_api = None
-            try:
-                import badger2040
-                # Test if constants exist
-                _ = badger2040.UP
-                button_api = "constants"
-                print("✓ Using badger2040 constants (UP, DOWN, A, B, C)")
-            except (AttributeError, NameError):
-                # Try numeric API
-                try:
-                    if hasattr(self.badger, 'pressed') and callable(self.badger.pressed):
-                        # Test with a safe numeric index
-                        self.badger.pressed(0)
-                        button_api = "numeric"
-                        print("✓ Using numeric button API")
-                except:
-                    pass
-            
-            if button_api is None:
-                print("⚠ Button API not detected - running without button input")
-            
             # Main loop with button handling
             try:
                 while True:
-                    if button_api == "constants":
-                        try:
-                            import badger2040
-                            if self.badger.pressed(badger2040.UP):
-                                self.button_up_pressed()
-                                time.sleep(self.BUTTON_DELAY)
-                            elif self.badger.pressed(badger2040.DOWN):
-                                self.button_down_pressed()
-                                time.sleep(self.BUTTON_DELAY)
-                            elif self.badger.pressed(badger2040.A):
-                                self.button_a_pressed()
-                                time.sleep(self.BUTTON_DELAY)
-                            elif self.badger.pressed(badger2040.B):
-                                self.button_b_pressed()
-                                time.sleep(self.BUTTON_DELAY)
-                            elif self.badger.pressed(badger2040.C):
-                                self.button_c_pressed()
-                                time.sleep(self.BUTTON_DELAY)
-                        except Exception:
-                            pass
-                    elif button_api == "numeric":
-                        try:
-                            if self.badger.pressed(0):  # UP
-                                self.button_up_pressed()
-                                time.sleep(self.BUTTON_DELAY)
-                            elif self.badger.pressed(1):  # DOWN
-                                self.button_down_pressed()
-                                time.sleep(self.BUTTON_DELAY)
-                            elif self.badger.pressed(2):  # A
-                                self.button_a_pressed()
-                                time.sleep(self.BUTTON_DELAY)
-                            elif self.badger.pressed(3):  # B
-                                self.button_b_pressed()
-                                time.sleep(self.BUTTON_DELAY)
-                            elif self.badger.pressed(4):  # C
-                                self.button_c_pressed()
-                                time.sleep(self.BUTTON_DELAY)
-                        except Exception:
-                            pass
+                    # Check buttons using badger2040 constants
+                    if self.button_up is not None and self.badger.pressed(self.button_up):
+                        self.button_up_pressed()
+                        time.sleep(self.BUTTON_DELAY)
+                    elif self.button_down is not None and self.badger.pressed(self.button_down):
+                        self.button_down_pressed()
+                        time.sleep(self.BUTTON_DELAY)
+                    elif self.button_a is not None and self.badger.pressed(self.button_a):
+                        self.button_a_pressed()
+                        time.sleep(self.BUTTON_DELAY)
+                    elif self.button_b is not None and self.badger.pressed(self.button_b):
+                        self.button_b_pressed()
+                        time.sleep(self.BUTTON_DELAY)
+                    elif self.button_c is not None and self.badger.pressed(self.button_c):
+                        self.button_c_pressed()
+                        time.sleep(self.BUTTON_DELAY)
                     
                     time.sleep(0.05)  # Small delay to prevent CPU spinning
             except KeyboardInterrupt:
