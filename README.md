@@ -29,6 +29,8 @@
    rshell cp fishdraw_complete.py /pyboard/
    rshell cp config.json /pyboard/
    ```
+   
+   **Note:** `fishdraw_complete.py` is compatible with MicroPython (no external dependencies).
 
 3. **Done!** Unplug and reconnect - it will start automatically.
 
@@ -38,12 +40,14 @@ Edit `config.json` on your device:
 ```json
 {
   "seed_step": 10,           # How much A/C buttons change seed
-  "history_size": 20,        # How many fish to remember
+  "history_size": 200,       # How many fish to remember (only stores seeds!)
   "button_delay_ms": 200,    # Debounce delay (ms)
   "display_width": 296,
   "display_height": 128
 }
 ```
+
+**Note on history:** Only the seed is stored (~10 bytes per fish), so you can safely store 100+ fish without memory issues! The fish is regenerated from the seed when you navigate back to it.
 
 ### Local Testing
 
@@ -181,7 +185,18 @@ This automatically scales and centers the fish for the target display.
 3. **Display optimization**: Automatically scales and centers the fish for 296x128 displays
 4. **Finished rendering**: Outputs complete drawings (no incremental drawing steps needed)
 5. **Polyline format**: All output is polylines - perfect for plotters and e-ink displays
-6. **History tracking**: Keeps track of recently generated fish for quick navigation
+6. **History tracking**: Only stores seeds (~10 bytes each), fish are regenerated on demand
+
+### Why only seeds in history?
+
+Each seed produces the **exact same fish** every time (deterministic). So instead of storing the entire fish drawing (thousands of bytes), we only store the seed string (10-20 bytes). This means:
+
+- **20 fish**: ~0.2 KB
+- **100 fish**: ~1 KB  
+- **200 fish**: ~2 KB
+- **1000 fish**: ~10 KB
+
+Memory is not a constraint! The default is now 200 fish, but you can increase it as much as you want.
 
 
 ## output formats

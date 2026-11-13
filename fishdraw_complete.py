@@ -9,12 +9,19 @@ ported to Python for MicroPython/Badger2040 compatibility.
 
 import math
 import random
-from typing import List, Tuple, Optional, Dict, Any, Callable
 
-# Type aliases
-Point = Tuple[float, float]
-Polyline = List[Point]
-Polylines = List[Polyline]
+# Try to import typing for type hints (not available in MicroPython)
+try:
+    from typing import List, Tuple, Optional, Dict, Any, Callable
+    # Type aliases
+    Point = Tuple[float, float]
+    Polyline = List[Point]
+    Polylines = List[Polyline]
+except ImportError:
+    # MicroPython: define dummy types for compatibility
+    Point = None
+    Polyline = None
+    Polylines = None
 
 PI = math.pi
 
