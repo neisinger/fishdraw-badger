@@ -38,26 +38,16 @@ class BadgerFish:
         # Initialize display
         self.badger = None
         self.has_display = False
-        self.button_up = None
-        self.button_down = None
-        self.button_a = None
-        self.button_b = None
-        self.button_c = None
         
         try:
             import badger2040
             self.badger = badger2040.Badger2040()
-            self.button_up = badger2040.UP
-            self.button_down = badger2040.DOWN
-            self.button_a = badger2040.A
-            self.button_b = badger2040.B
-            self.button_c = badger2040.C
             self.has_display = True
+            print("✓ Badger2040 display initialized")
         except ImportError:
             print("Badger2040 library not found - running in simulation mode")
-        except AttributeError as e:
-            print(f"Error loading Badger2040 buttons: {e}")
-            print("Trying alternative button constants...")
+        except Exception as e:
+            print(f"Error initializing Badger2040: {e}")
         
         # History and state management
         self.history = []  # List of generated fish seeds
@@ -317,7 +307,7 @@ Button Controls:
         print("=" * 40)
         self.print_status()
         
-        if self.has_display and self.badger and self.button_up is not None:
+        if self.has_display and self.badger:
             print("\nBadger2040 detected!")
             print("Button mapping:")
             print("  A - Decrease seed")
@@ -332,22 +322,40 @@ Button Controls:
             # Main loop with button handling
             try:
                 while True:
-                    # Check buttons using correct Badger2040 API
-                    if self.badger.pressed(self.button_up):
-                        self.button_up_pressed()
-                        time.sleep(self.BUTTON_DELAY)
-                    elif self.badger.pressed(self.button_down):
-                        self.button_down_pressed()
-                        time.sleep(self.BUTTON_DELAY)
-                    elif self.badger.pressed(self.button_a):
-                        self.button_a_pressed()
-                        time.sleep(self.BUTTON_DELAY)
-                    elif self.badger.pressed(self.button_b):
-                        self.button_b_pressed()
-                        time.sleep(self.BUTTON_DELAY)
-                    elif self.badger.pressed(self.button_c):
-                        self.button_c_pressed()
-                        time.sleep(self.BUTTON_DELAY)
+                    # Check buttons - try different APIs
+                    try:
+                        if self.badger.button_up.is_pressed():
+                            self.button_up_pressed()
+                            time.sleep(self.BUTTON_DELAY)
+                        elif self.badger.button_down.is_pressed():
+                            self.button_down_pressed()
+                            time.sleep(self.BUTTON_DELAY)
+                        elif self.badger.button_a.is_pressed():
+                            self.button_a_pressed()
+                            time.sleep(self.BUTTON_DELAY)
+                        elif self.badger.button_b.is_pressed():
+                            self.button_b_pressed()
+                            time.sleep(self.BUTTON_DELAY)
+                        elif self.badger.button_c.is_pressed():
+                            self.button_c_pressed()
+                            time.sleep(self.BUTTON_DELAY)
+                    except AttributeError:
+                        # Try alternative API with pressed() method
+                        if self.badger.button_up.pressed():
+                            self.button_up_pressed()
+                            time.sleep(self.BUTTON_DELAY)
+                        elif self.badger.button_down.pressed():
+                            self.button_down_pressed()
+                            time.sleep(self.BUTTON_DELAY)
+                        elif self.badger.button_a.pressed():
+                            self.button_a_pressed()
+                            time.sleep(self.BUTTON_DELAY)
+                        elif self.badger.button_b.pressed():
+                            self.button_b_pressed()
+                            time.sleep(self.BUTTON_DELAY)
+                        elif self.badger.button_c.pressed():
+                            self.button_c_pressed()
+                            time.sleep(self.BUTTON_DELAY)
                     
                     time.sleep(0.05)  # Small delay to prevent CPU spinning
             except KeyboardInterrupt:
