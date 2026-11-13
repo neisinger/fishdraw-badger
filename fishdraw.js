@@ -779,23 +779,24 @@ function poissondisk(W, H, r, samples) {
 }
 
 
-function draw_svg(polylines){
-  let o = `<svg xmlns="http://www.w3.org/2000/svg" width="520" height="320">`
-  o += `<rect x="0" y="0" width="520" height="320" fill="floralwhite"/><rect x="10" y="10" width="500" height="300" stroke="black" stroke-width="1" fill="none"/><path stroke="black" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round" d="`
+function draw_svg(polylines, width=296, height=128){
+  let o = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">`
+  o += `<rect x="0" y="0" width="${width}" height="${height}" fill="white"/>`;
+  o += `<path stroke="black" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round" d="`
   for (let i = 0; i < polylines.length; i++){
     o += '\nM ';
     for (let j = 0; j < polylines[i].length; j++){
       let [x,y] = polylines[i][j];
-      o += `${(~~((x+10)*100)) /100} ${(~~((y+10)*100)) /100} `;
+      o += `${(~~(x*100))/100} ${(~~(y*100))/100} `;
     }
   }
   o += `\n"/></svg>`
   return o;
 }
 
-function draw_svg_anim(polylines,speed){
-  let o = `<svg xmlns="http://www.w3.org/2000/svg" width="520" height="320">`;
-  o += `<rect x="0" y="0" width="520" height="320" fill="floralwhite"/><rect x="10" y="10" width="500" height="300" stroke="black" stroke-width="1" fill="none"/>`
+function draw_svg_anim(polylines, speed=0.005, width=296, height=128){
+  let o = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">`;
+  o += `<rect x="0" y="0" width="${width}" height="${height}" fill="white"/>`
   let lengths = [];
   let acc_lengths = [];
   let total_l = 0;
@@ -2177,28 +2178,27 @@ function fish(arg){
   concat();
 }
 
-function reframe(polylines,pad=20,text=null){
+function reframe(polylines, display_width=296, display_height=128, text=null){
   
-  let W = (500-pad*2);
-  let H = (300-pad*2) - (text?10:0);
+  let pad = 5;
+  let W = display_width - pad * 2;
+  let H = display_height - pad * 2;
   let bbox = get_bbox(polylines.flat());
-  let sw = W/bbox.w;
-  let sh = H/bbox.h;
-  let s = Math.min(sw,sh);
-  let px = (W-bbox.w*s)/2;
-  let py = (H-bbox.h*s)/2;
+  let sw = W / bbox.w;
+  let sh = H / bbox.h;
+  let s = Math.min(sw, sh);
+  let px = (W - bbox.w * s) / 2;
+  let py = (H - bbox.h * s) / 2;
+  
   for (let i = 0; i < polylines.length; i++){
     for (let j = 0; j < polylines[i].length; j++){
       let [x,y] = polylines[i][j];
-      x = (x - bbox.x) * s + px+pad;
-      y = (y - bbox.y) * s + py+pad;
+      x = (x - bbox.x) * s + px + pad;
+      y = (y - bbox.y) * s + py + pad;
       polylines[i][j] = [x,y];
     }
   }
-  let [tw,tp] = put_text(text);
-  tp = tp.map(p=>scl_poly(shr_poly(p,-0.3),0.3,0.3));
-  tw *= 0.3;
-  polylines.push(...tp.map(p=>trsl_poly(p,250-tw/2,300-pad+5)));
+  
   return polylines;
 }
 
@@ -2562,7 +2562,7 @@ function str_to_seed(str){
   return n;
 }
 
-function main(seed){
+function main(seed, display_width=296, display_height=128){
   if (seed === undefined){
     jsr = ~~(Math.random()*10000);
     let name = binomen();
@@ -2570,16 +2570,18 @@ function main(seed){
   }
   jsr = str_to_seed(seed);
   let drawing = fish(generate_params());
-  return (cleanup(reframe(drawing,20,seed+'.')));
+  return (cleanup(reframe(drawing, display_width, display_height)));
 }
 
 
 if (typeof module != "undefined"){
-  module.exports = {main,generate_params,default_params,fish,reframe,cleanup,draw_svg,binomen,str_to_seed};
+  module.exports = {main,generate_params,default_params,fish,reframe,cleanup,draw_svg,draw_svg_anim,binomen,str_to_seed};
   if (require.main === module) {
     let seed = undefined;
     let format = 'svg';
-    let speed = 0.005;
+    let speed = 1.0;
+    let width = 296;
+    let height = 128;
     for (let i = 2; i < process.argv.length; i++){
       let a = process.argv[i];
       if (a == '--seed'){
@@ -2588,16 +2590,20 @@ if (typeof module != "undefined"){
         format = process.argv[i+1];
       }else if (a == '--speed'){
         if (process.argv[i+1] > 0)
-          speed = speed / process.argv[i+1];
+          speed = parseFloat(process.argv[i+1]);
+      }else if (a == '--width'){
+        width = parseInt(process.argv[i+1]);
+      }else if (a == '--height'){
+        height = parseInt(process.argv[i+1]);
       }
     }
-    let polylines = main(seed);
+    let polylines = main(seed, width, height);
     if (format == 'svg'){
-      console.log(draw_svg(polylines));
+      console.log(draw_svg(polylines, width, height));
     }else if (format == 'json'){
       console.log(JSON.stringify(polylines));
     }else if (format == 'smil'){
-      console.log(draw_svg_anim(polylines,speed));
+      console.log(draw_svg_anim(polylines, speed * 0.005, width, height));
     }else if (format == 'csv'){
       console.log(polylines.map(x=>x.flat().join(',')).join('\n'));
     }else if (format == 'ps'){
