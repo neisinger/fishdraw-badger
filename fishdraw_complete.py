@@ -33,7 +33,7 @@ def set_seed(seed: int):
     global _jsr
     _jsr = seed & 0xFFFFFFFF
 
-def rand() -> float:
+def rand():
     """Seeded pseudo-random number (XOR shift)"""
     global _jsr
     _jsr ^= (_jsr << 17) & 0xFFFFFFFF
@@ -51,10 +51,10 @@ _perlin_octaves = 4
 _perlin_amp_falloff = 0.5
 _perlin = None
 
-def _scaled_cosine(i: float) -> float:
+def _scaled_cosine(i: float):
     return 0.5 * (1.0 - math.cos(i * PI))
 
-def noise(x: float, y: float = 0, z: float = 0) -> float:
+def noise(x: float, y: float = 0, z: float = 0):
     """Perlin noise function"""
     global _perlin
     
@@ -96,33 +96,33 @@ def noise(x: float, y: float = 0, z: float = 0) -> float:
     return r
 
 # Geometry utilities
-def dist(x0: float, y0: float, x1: float, y1: float) -> float:
+def dist(x0: float, y0: float, x1: float, y1: float):
     return math.hypot(x1 - x0, y1 - y0)
 
-def lerp(a: float, b: float, t: float) -> float:
+def lerp(a: float, b: float, t: float):
     return a * (1 - t) + b * t
 
-def lerp2d(x0: float, y0: float, x1: float, y1: float, t: float) -> Point:
+def lerp2d(x0: float, y0: float, x1: float, y1: float, t: float):
     return (x0 * (1 - t) + x1 * t, y0 * (1 - t) + y1 * t)
 
-def get_bbox(points: Polyline) -> Dict[str, float]:
+def get_bbox(points: Polyline):
     if not points:
         return {'x': 0, 'y': 0, 'w': 0, 'h': 0}
     xs, ys = zip(*points)
     xmin, xmax, ymin, ymax = min(xs), max(xs), min(ys), max(ys)
     return {'x': xmin, 'y': ymin, 'w': xmax - xmin, 'h': ymax - ymin}
 
-def trsl_poly(poly: Polyline, x: float, y: float) -> Polyline:
+def trsl_poly(poly: Polyline, x: float, y: float):
     return [(px + x, py + y) for px, py in poly]
 
-def scl_poly(poly: Polyline, sx: float, sy: float) -> Polyline:
+def scl_poly(poly: Polyline, sx: float, sy: float):
     return [(px * sx, py * sy) for px, py in poly]
 
-def rot_poly(poly: Polyline, th: float) -> Polyline:
+def rot_poly(poly: Polyline, th: float):
     cos_th, sin_th = math.cos(th), math.sin(th)
     return [(px * cos_th - py * sin_th, px * sin_th + py * cos_th) for px, py in poly]
 
-def resample(polyline: Polyline, step: float) -> Polyline:
+def resample(polyline: Polyline, step: float):
     """Resample polyline to fixed step size"""
     if len(polyline) < 2:
         return polyline
@@ -148,15 +148,15 @@ def resample(polyline: Polyline, step: float) -> Polyline:
     return out
 
 # Fish body generation helpers
-def bean(t: float) -> float:
+def bean(t: float):
     """Bean-shaped curve function"""
     return math.sin(t * PI) ** 2
 
-def deviate(amount: float = 0.05) -> float:
+def deviate(amount: float = 0.05):
     """Random deviate for variation"""
     return (rand() - 0.5) * 2 * amount
 
-def approx_poly_dp(polyline: Polyline, epsilon: float) -> Polyline:
+def approx_poly_dp(polyline: Polyline, epsilon: float):
     """Douglas-Peucker polygon simplification"""
     if len(polyline) <= 2:
         return polyline
@@ -187,7 +187,7 @@ def approx_poly_dp(polyline: Polyline, epsilon: float) -> Polyline:
 # Fish feature generation
 def fin_a(curve: Polyline, angle0: float, angle1: float, length_func: Callable, 
           is_tail: int = 0, curve_vary: float = 0, curve_vary2: float = 0, 
-          soft: float = 0) -> Tuple[Polyline, Polylines]:
+          soft: float = 0):
     """Generate fin type A"""
     curve = resample(curve, 2)
     outline = []
@@ -219,12 +219,12 @@ def fin_a(curve: Polyline, angle0: float, angle1: float, length_func: Callable,
     return outline, fins
 
 def fin_b(curve: Polyline, angle0: float, angle1: float, 
-          length_func: Callable, soft: float = 0) -> Tuple[Polyline, Polylines]:
+          length_func: Callable, soft: float = 0):
     """Generate fin type B (simplified)"""
     return fin_a(curve, angle0, angle1, length_func, soft=soft)
 
 def fin_adipose(curve: Polyline, width: float, height: float, 
-                count: int) -> Tuple[Polyline, Polylines]:
+                count: int):
     """Adipose fin (small fin behind dorsal)"""
     outline = []
     fins = []
@@ -238,7 +238,7 @@ def fin_adipose(curve: Polyline, width: float, height: float,
     return outline, fins
 
 def fish_head(x0: float, y0: float, x1: float, y1: float, x2: float, 
-              y2: float, params: Dict) -> Tuple[Polyline, Polylines]:
+              y2: float, params: Dict):
     """Generate fish head"""
     outline = []
     features = []
@@ -269,15 +269,15 @@ def fish_head(x0: float, y0: float, x1: float, y1: float, x2: float,
     
     return outline, features
 
-def pattern_dot(scale: float = 1) -> Callable:
+def pattern_dot(scale: float = 1):
     """Generate dot pattern function"""
     # Simplified: return a function that generates dots
-    def pattern_func(x: float, y: float) -> bool:
+    def pattern_func(x: float, y: float):
         return (noise(x * 0.1, y * 0.1) * noise(x * 0.01, y * 0.01)) > 0.3
     return pattern_func
 
 # Main fish generation
-def default_params() -> Dict:
+def default_params():
     """Default fish parameters"""
     return {
         'body_curve_type': 0,
@@ -306,7 +306,7 @@ def default_params() -> Dict:
         'nose_height': 0,
     }
 
-def generate_params() -> Dict:
+def generate_params():
     """Generate random fish parameters"""
     params = default_params()
     params['body_curve_type'] = int(rand() * 2)
@@ -321,7 +321,7 @@ def generate_params() -> Dict:
     params['eye_size'] = 5 + rand() * 10
     return params
 
-def fish(params: Optional[Dict] = None) -> Polylines:
+def fish(params: Optional[Dict] = None):
     """Generate complete fish drawing"""
     if params is None:
         params = generate_params()
@@ -419,7 +419,7 @@ def fish(params: Optional[Dict] = None) -> Polylines:
     
     return polylines
 
-def str_to_seed(s: str) -> int:
+def str_to_seed(s: str):
     """Convert string to seed"""
     n = 1
     for i, c in enumerate(s):
@@ -431,13 +431,16 @@ def str_to_seed(s: str) -> int:
         n = n & 0xFFFFFFFF
     return n
 
-def binomen() -> str:
+def binomen():
     """Generate random Latin-ish binomial name"""
     consonants = "bcdfghjklmnprstvwxyz"
     vowels = "aeiou"
     
     def syllable():
-        return random.choice(consonants) + random.choice(vowels)
+        # Use our rand() function instead of random.choice (MicroPython compatible)
+        c = consonants[int(rand() * len(consonants))]
+        v = vowels[int(rand() * len(vowels))]
+        return c + v
     
     genus = ''.join(syllable() for _ in range(1 + int(rand() * 2)))
     species = ''.join(syllable() for _ in range(1 + int(rand() * 2)))
@@ -445,7 +448,7 @@ def binomen() -> str:
     return genus.capitalize() + ' ' + species.lower()
 
 def reframe(drawing: Polylines, display_width: int = 296, display_height: int = 128, 
-            margin: float = 5) -> Polylines:
+            margin: float = 5):
     """Reframe drawing to fit exactly on 296x128 display"""
     if not drawing:
         return drawing
@@ -477,7 +480,7 @@ def reframe(drawing: Polylines, display_width: int = 296, display_height: int = 
     
     return result
 
-def cleanup(drawing: Polylines) -> Polylines:
+def cleanup(drawing: Polylines):
     """Clean up drawing"""
     result = []
     for poly in drawing:
@@ -490,7 +493,7 @@ def cleanup(drawing: Polylines) -> Polylines:
                 result.append(simplified)
     return result
 
-def main(seed: Optional[str] = None, display_width: int = 296, display_height: int = 128) -> Polylines:
+def main(seed: Optional[str] = None, display_width: int = 296, display_height: int = 128):
     """Generate fish optimized for 296x128 display"""
     if seed is None:
         set_seed(int(rand() * 10000))
@@ -509,7 +512,7 @@ def main(seed: Optional[str] = None, display_width: int = 296, display_height: i
     return drawing
 
 # SVG export (for testing on desktop)
-def draw_svg(polylines: Polylines, width: int = 296, height: int = 128) -> str:
+def draw_svg(polylines: Polylines, width: int = 296, height: int = 128):
     """Render polylines to SVG"""
     svg = f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}">\n'
     svg += '<rect width="100%" height="100%" fill="white"/>\n'
