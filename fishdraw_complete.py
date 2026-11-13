@@ -49,18 +49,27 @@ PERLIN_ZWRAP = 1 << PERLIN_ZWRAPB
 PERLIN_SIZE = 4095
 _perlin_octaves = 4
 _perlin_amp_falloff = 0.5
-_perlin = None
 
 def _scaled_cosine(i):
     return 0.5 * (1.0 - math.cos(i * PI))
 
+def _perlin_value(index):
+    """Generate deterministic Perlin value for index using seeded RNG"""
+    global _jsr
+    old_jsr = _jsr
+    _jsr = (index * 73856093) & 0xFFFFFFFF
+    
+    # Generate one random value
+    _jsr ^= (_jsr << 17) & 0xFFFFFFFF
+    _jsr ^= (_jsr >> 13) & 0xFFFFFFFF
+    _jsr ^= (_jsr << 5) & 0xFFFFFFFF
+    val = (_jsr & 0xFFFFFFFF) / 4294967295.0
+    
+    _jsr = old_jsr
+    return val
+
 def noise(x, y= 0, z= 0):
-    """Perlin noise function"""
-    global _perlin
-    
-    if _perlin is None:
-        _perlin = [rand() for _ in range(PERLIN_SIZE + 1)]
-    
+    """Perlin noise function with on-demand value generation"""
     x, y, z = abs(x), abs(y), abs(z)
     xi, yi, zi = int(x), int(y), int(z)
     xf, yf, zf = x - xi, y - yi, z - zi
@@ -70,18 +79,18 @@ def noise(x, y= 0, z= 0):
         of = xi + (yi << PERLIN_YWRAPB) + (zi << PERLIN_ZWRAPB)
         rxf, ryf = _scaled_cosine(xf), _scaled_cosine(yf)
         
-        n1 = _perlin[of & PERLIN_SIZE]
-        n1 += rxf * (_perlin[(of + 1) & PERLIN_SIZE] - n1)
+        n1 = _perlin_value(of & PERLIN_SIZE)
+        n1 += rxf * (_perlin_value((of + 1) & PERLIN_SIZE) - n1)
         
-        n2 = _perlin[(of + PERLIN_YWRAP) & PERLIN_SIZE]
-        n2 += rxf * (_perlin[(of + PERLIN_YWRAP + 1) & PERLIN_SIZE] - n2)
+        n2 = _perlin_value((of + PERLIN_YWRAP) & PERLIN_SIZE)
+        n2 += rxf * (_perlin_value((of + PERLIN_YWRAP + 1) & PERLIN_SIZE) - n2)
         n1 += ryf * (n2 - n1)
         
         of += PERLIN_ZWRAP
-        n2 = _perlin[of & PERLIN_SIZE]
-        n2 += rxf * (_perlin[(of + 1) & PERLIN_SIZE] - n2)
-        n3 = _perlin[(of + PERLIN_YWRAP) & PERLIN_SIZE]
-        n3 += rxf * (_perlin[(of + PERLIN_YWRAP + 1) & PERLIN_SIZE] - n3)
+        n2 = _perlin_value(of & PERLIN_SIZE)
+        n2 += rxf * (_perlin_value((of + 1) & PERLIN_SIZE) - n2)
+        n3 = _perlin_value((of + PERLIN_YWRAP) & PERLIN_SIZE)
+        n3 += rxf * (_perlin_value((of + PERLIN_YWRAP + 1) & PERLIN_SIZE) - n3)
         n2 += ryf * (n3 - n2)
         n1 += _scaled_cosine(zf) * (n2 - n1)
         
