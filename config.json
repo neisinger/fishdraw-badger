@@ -1,0 +1,8 @@
+{
+  "seed_step": 10,
+  "history_size": 20,
+  "button_delay_ms": 200,
+  "display_width": 296,
+  "display_height": 128,
+  "simulation_mode": true
+}

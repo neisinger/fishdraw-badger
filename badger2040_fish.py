@@ -4,16 +4,38 @@ Display driver and integration for Pimoroni Badger2040 e-ink display
 """
 
 import gc
-from fishdraw_complete import main, draw_svg
+import json
+import random
+import time
+from fishdraw_complete import main, draw_svg, str_to_seed, binomen
 
 class BadgerFish:
     """FishDraw controller for Badger2040"""
     
-    DISPLAY_WIDTH = 296
-    DISPLAY_HEIGHT = 128
-    
-    def __init__(self):
-        """Initialize Badger2040 display"""
+    def __init__(self, config_path="config.json"):
+        """Initialize Badger2040 display and load configuration"""
+        # Load configuration
+        try:
+            with open(config_path, 'r') as f:
+                self.config = json.load(f)
+        except FileNotFoundError:
+            print(f"Config file not found, using defaults")
+            self.config = {
+                "seed_step": 10,
+                "history_size": 20,
+                "button_delay_ms": 200,
+                "display_width": 296,
+                "display_height": 128,
+                "simulation_mode": True
+            }
+        
+        self.DISPLAY_WIDTH = self.config.get("display_width", 296)
+        self.DISPLAY_HEIGHT = self.config.get("display_height", 128)
+        self.SEED_STEP = self.config.get("seed_step", 10)
+        self.HISTORY_SIZE = self.config.get("history_size", 20)
+        self.BUTTON_DELAY = self.config.get("button_delay_ms", 200) / 1000.0
+        
+        # Initialize display
         try:
             import badger2040
             self.badger = badger2040.Badger2040()
@@ -22,11 +44,30 @@ class BadgerFish:
             print("Badger2040 library not found - running in simulation mode")
             self.badger = None
             self.has_display = False
+        
+        # History and state management
+        self.history = []  # List of generated fish seeds
+        self.current_history_index = -1  # Index in history
+        self.current_seed = None
+        self.current_drawing = None
+        self.last_button_time = 0
+    
+    def load_config(self, path="config.json"):
+        """Load configuration from JSON file"""
+        try:
+            with open(path, 'r') as f:
+                self.config = json.load(f)
+                self.SEED_STEP = self.config.get("seed_step", 10)
+                self.HISTORY_SIZE = self.config.get("history_size", 20)
+                self.BUTTON_DELAY = self.config.get("button_delay_ms", 200) / 1000.0
+                print(f"✓ Loaded config: step={self.SEED_STEP}, history_size={self.HISTORY_SIZE}")
+        except Exception as e:
+            print(f"Error loading config: {e}")
     
     def draw_polylines(self, polylines, thickness=1):
         """Draw polylines on the display"""
         if not self.has_display:
-            print("Display simulation: Would draw", len(polylines), "polylines")
+            print(f"Display simulation: Would draw {len(polylines)} polylines")
             return
         
         # Clear display
@@ -79,50 +120,231 @@ class BadgerFish:
     
     def generate_and_display(self, seed=None):
         """Generate a fish and display it as a finished drawing"""
-        print("Generating fish...")
+        if seed is None:
+            seed = binomen()
+        
+        print(f"Generating fish: {seed}...")
         drawing = main(seed, self.DISPLAY_WIDTH, self.DISPLAY_HEIGHT)
         print(f"Generated {len(drawing)} polylines")
         
         print("Drawing to display...")
         self.draw_polylines(drawing, thickness=1)
-        print("Done!")
         
-        # Free memory
+        # Store in history
+        self.current_seed = seed
+        self.current_drawing = drawing
+        if seed not in self.history:
+            self.history.append(seed)
+            if len(self.history) > self.HISTORY_SIZE:
+                self.history.pop(0)
+        self.current_history_index = self.history.index(seed)
+        
+        print("Done!")
         gc.collect()
     
-    def demo_mode(self):
-        """Run demo mode with different fish"""
-        seeds = ["Alpha", "Beta", "Gamma", "Delta", "Epsilon"]
-        for seed in seeds:
-            print(f"\n=== Generating {seed} ===")
-            self.generate_and_display(seed)
+    def _can_press_button(self):
+        """Check if enough time has passed since last button press"""
+        current_time = time.time()
+        if current_time - self.last_button_time >= self.BUTTON_DELAY:
+            self.last_button_time = current_time
+            return True
+        return False
+    
+    def button_a_pressed(self):
+        """Button A: Decrease seed by SEED_STEP"""
+        if not self._can_press_button():
+            return
+        
+        if self.current_seed is None:
+            self.generate_and_display(binomen())
+            return
+        
+        # Try to parse seed as number
+        try:
+            seed_num = int(self.current_seed)
+        except ValueError:
+            # If not a number, try to use hash
+            seed_num = str_to_seed(self.current_seed)
+        
+        new_seed_num = seed_num - self.SEED_STEP
+        if new_seed_num < 0:
+            new_seed_num = 0
+        
+        new_seed = str(new_seed_num)
+        print(f"Button A: {self.current_seed} -> {new_seed}")
+        self.generate_and_display(new_seed)
+    
+    def button_b_pressed(self):
+        """Button B: Random seed"""
+        if not self._can_press_button():
+            return
+        
+        new_seed = binomen()
+        print(f"Button B: Random seed -> {new_seed}")
+        self.generate_and_display(new_seed)
+    
+    def button_c_pressed(self):
+        """Button C: Increase seed by SEED_STEP"""
+        if not self._can_press_button():
+            return
+        
+        if self.current_seed is None:
+            self.generate_and_display(binomen())
+            return
+        
+        # Try to parse seed as number
+        try:
+            seed_num = int(self.current_seed)
+        except ValueError:
+            # If not a number, try to use hash
+            seed_num = str_to_seed(self.current_seed)
+        
+        new_seed_num = seed_num + self.SEED_STEP
+        new_seed = str(new_seed_num)
+        print(f"Button C: {self.current_seed} -> {new_seed}")
+        self.generate_and_display(new_seed)
+    
+    def button_up_pressed(self):
+        """Button Up: Previous fish in history"""
+        if not self._can_press_button():
+            return
+        
+        if not self.history:
+            print("No history available")
+            return
+        
+        new_index = self.current_history_index - 1
+        if new_index < 0:
+            new_index = len(self.history) - 1
+        
+        self.current_history_index = new_index
+        seed = self.history[new_index]
+        print(f"History Up: [{new_index + 1}/{len(self.history)}] {seed}")
+        self.generate_and_display(seed)
+    
+    def button_down_pressed(self):
+        """Button Down: Next fish in history"""
+        if not self._can_press_button():
+            return
+        
+        if not self.history:
+            print("No history available")
+            return
+        
+        new_index = self.current_history_index + 1
+        if new_index >= len(self.history):
+            new_index = 0
+        
+        self.current_history_index = new_index
+        seed = self.history[new_index]
+        print(f"History Down: [{new_index + 1}/{len(self.history)}] {seed}")
+        self.generate_and_display(seed)
+    
+    def print_status(self):
+        """Print current status"""
+        status = f"""
+╔════════════════════════════════════════════╗
+║           FishDraw for Badger2040          ║
+╚════════════════════════════════════════════╝
+Current Seed:      {self.current_seed or 'None'}
+History Size:      {len(self.history)}/{self.HISTORY_SIZE}
+History Index:     {self.current_history_index + 1}/{len(self.history)} (if available)
+Seed Step:         {self.SEED_STEP}
+Display:           {self.DISPLAY_WIDTH}x{self.DISPLAY_HEIGHT}
+Has Display:       {self.has_display}
+
+Button Controls:
+  A: Seed - {self.SEED_STEP}
+  B: Random Seed
+  C: Seed + {self.SEED_STEP}
+  UP: Previous Fish (History)
+  DOWN: Next Fish (History)
+"""
+        print(status)
+    
+    def interactive_mode(self):
+        """Interactive mode with button simulation"""
+        print("Interactive mode - Simulating button presses")
+        print("Commands: a(button_a), b(button_b), c(button_c), u(up), d(down), s(status), q(quit)")
+        
+        # Generate initial fish
+        self.generate_and_display(binomen())
+        
+        while True:
+            try:
+                cmd = input("\nCommand> ").strip().lower()
+                
+                if cmd == 'a':
+                    self.button_a_pressed()
+                elif cmd == 'b':
+                    self.button_b_pressed()
+                elif cmd == 'c':
+                    self.button_c_pressed()
+                elif cmd == 'u':
+                    self.button_up_pressed()
+                elif cmd == 'd':
+                    self.button_down_pressed()
+                elif cmd == 's':
+                    self.print_status()
+                elif cmd == 'q':
+                    print("Exiting...")
+                    break
+                else:
+                    print("Unknown command. Try: a, b, c, u, d, s, or q")
+            except KeyboardInterrupt:
+                print("\nExiting...")
+                break
+            except Exception as e:
+                print(f"Error: {e}")
+    
+    def run(self):
+        """Main run loop for Badger2040"""
+        print("FishDraw for Badger2040")
+        print("=" * 40)
+        self.print_status()
+        
+        if self.has_display:
+            print("\nBadger2040 detected!")
+            print("Button mapping:")
+            print("  A - Decrease seed")
+            print("  B - Random seed")
+            print("  C - Increase seed")
+            print("  UP - Previous fish")
+            print("  DOWN - Next fish")
             
-            if self.has_display:
-                # Wait for user interaction (on real Badger2040)
-                try:
-                    # This is specific to Badger2040 buttons
-                    import time
-                    time.sleep(3)
-                except:
-                    pass
+            # Generate initial fish
+            self.generate_and_display(binomen())
+            
+            # Main loop with button handling
+            try:
+                while True:
+                    # Check buttons
+                    if self.badger.is_pressed(badger2040.UP):
+                        self.button_up_pressed()
+                    elif self.badger.is_pressed(badger2040.DOWN):
+                        self.button_down_pressed()
+                    elif self.badger.is_pressed(badger2040.A):
+                        self.button_a_pressed()
+                    elif self.badger.is_pressed(badger2040.B):
+                        self.button_b_pressed()
+                    elif self.badger.is_pressed(badger2040.C):
+                        self.button_c_pressed()
+                    
+                    time.sleep(0.1)
+            except KeyboardInterrupt:
+                print("\nShutting down...")
+        else:
+            print("\nRunning in simulation mode (interactive)")
+            self.interactive_mode()
 
 
 def main_badger():
     """Main entry point for Badger2040"""
-    print("FishDraw for Badger2040")
-    print("=" * 30)
-    
-    badger_fish = BadgerFish()
-    
-    if badger_fish.has_display:
-        print("Badger2040 detected!")
-        # In real usage, you'd add button handling here
-        badger_fish.generate_and_display()
-    else:
-        print("Running in simulation mode")
-        badger_fish.demo_mode()
+    badger_fish = BadgerFish(config_path="config.json")
+    badger_fish.run()
 
 
 if __name__ == "__main__":
     main_badger()
+
 

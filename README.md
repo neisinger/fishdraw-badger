@@ -10,7 +10,53 @@
 - outputs polylines (supported formats: SVG, JSON, CSV, etc.)
 - single file implementation
 - displays finished fish (no animation overhead)
+- **interactive button controls for Badger2040** (A/B/C buttons + up/down)
 
+
+## installation
+
+### Badger2040 Setup (3 simple steps)
+
+1. **Flash MicroPython** on your Badger2040 (once):
+   - Download the latest MicroPython `.uf2` from [Pimoroni releases](https://github.com/pimoroni/badger2040/releases)
+   - Hold the BOOT button and plug in USB
+   - Drag and drop the `.uf2` file to the mounted drive
+
+2. **Copy 4 files** to your Badger2040:
+   ```bash
+   rshell cp main.py /pyboard/
+   rshell cp badger2040_fish.py /pyboard/
+   rshell cp fishdraw_complete.py /pyboard/
+   rshell cp config.json /pyboard/
+   ```
+
+3. **Done!** Unplug and reconnect - it will start automatically.
+
+### Configure (optional)
+
+Edit `config.json` on your device:
+```json
+{
+  "seed_step": 10,           # How much A/C buttons change seed
+  "history_size": 20,        # How many fish to remember
+  "button_delay_ms": 200,    # Debounce delay (ms)
+  "display_width": 296,
+  "display_height": 128
+}
+```
+
+### Local Testing
+
+Test without hardware:
+
+```bash
+# Python - simulation mode
+python3 badger2040_fish.py
+# Commands: a b c u d s q (button A/B/C, up, down, status, quit)
+
+# JavaScript - generate SVG
+node fishdraw.js --seed "Test Fish"
+```
 
 ## usage
 
@@ -43,8 +89,22 @@ Generate and display fish on Badger2040:
 ```python
 from badger2040_fish import BadgerFish
 
+badger = BadgerFish(config_path="config.json")
+badger.run()  # Interactive mode with button controls
+```
+
+Or use programmatically:
+
+```python
+from badger2040_fish import BadgerFish
+
 badger = BadgerFish()
 badger.generate_and_display("MyFish")
+badger.button_a_pressed()  # Decrease seed
+badger.button_b_pressed()  # Random seed
+badger.button_c_pressed()  # Increase seed
+badger.button_up_pressed()  # Previous fish in history
+badger.button_down_pressed()  # Next fish in history
 ```
 
 Generate drawing as Python polylines:
@@ -55,7 +115,43 @@ from fishdraw_complete import main
 polylines = main("TestFish", 296, 128)  # optimized for 296x128 display
 ```
 
-### Command-line options
+### Badger2040 Button Controls
+
+When running on a Badger2040 device, use the buttons to control the fish:
+
+| Button | Action |
+|--------|--------|
+| **A** | Decrease seed by configured step (default: 10) |
+| **B** | Generate random seed (new fish) |
+| **C** | Increase seed by configured step (default: 10) |
+| **UP** | Navigate to previous fish in history |
+| **DOWN** | Navigate to next fish in history |
+
+### Configuration
+
+Create a `config.json` file to customize behavior:
+
+```json
+{
+  "seed_step": 10,
+  "history_size": 20,
+  "button_delay_ms": 200,
+  "display_width": 296,
+  "display_height": 128,
+  "simulation_mode": true
+}
+```
+
+**Configuration options:**
+
+- `seed_step`: Amount to increment/decrement seed with A/C buttons (default: 10)
+- `history_size`: Maximum number of seeds to keep in history (default: 20)
+- `button_delay_ms`: Minimum delay between button presses in milliseconds (default: 200)
+- `display_width`: Display width in pixels (default: 296)
+- `display_height`: Display height in pixels (default: 128)
+- `simulation_mode`: Enable simulation mode for testing (default: true)
+
+### Command-line options (JavaScript)
 
 - `--seed "name"`: Use specific seed string for reproducible fish. The seed determines all procedural parameters and fish characteristics.
 - `--format`: Output format (default: `svg`)
@@ -64,6 +160,8 @@ polylines = main("TestFish", 296, 128)  # optimized for 296x128 display
   - `csv`: CSV format (one polyline per line)
   - `smil`: Animated SVG (for web display)
 - `--speed`: Animation speed multiplier (default: 1.0, only affects `smil` format)
+- `--width`: Display width in pixels (default: 296)
+- `--height`: Display height in pixels (default: 128)
 
 ### Parameters
 
@@ -83,6 +181,7 @@ This automatically scales and centers the fish for the target display.
 3. **Display optimization**: Automatically scales and centers the fish for 296x128 displays
 4. **Finished rendering**: Outputs complete drawings (no incremental drawing steps needed)
 5. **Polyline format**: All output is polylines - perfect for plotters and e-ink displays
+6. **History tracking**: Keeps track of recently generated fish for quick navigation
 
 
 ## output formats
@@ -147,4 +246,3 @@ Sample fish generated with various seeds:
 ![](samples/000030.svg)
 ![](samples/000031.svg)
 ![](samples/000032.svg)
-
